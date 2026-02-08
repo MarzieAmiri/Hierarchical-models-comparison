@@ -1,6 +1,6 @@
 # Comparing Hierarchical Models: Statistical vs Tree-Based vs Neural Networks
 
-Code for a paper in *Machine Learning with Applications* (Elsevier, 2025).
+Code for our paper in *Machine Learning with Applications* (Elsevier, 2025).
 
 ## What's this about?
 
