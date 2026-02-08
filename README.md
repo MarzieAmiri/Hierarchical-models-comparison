@@ -4,7 +4,7 @@ Code for our paper in *Machine Learning with Applications* (Elsevier, 2025).
 
 ## What's this about?
 
-Healthcare data is naturally hierarchical — patients are nested within hospitals, hospitals within regions. But most prediction models ignore this structure. We wanted to know: **which modeling approach handles hierarchical data best?**
+Healthcare data is naturally hierarchical, patients are nested within hospitals, hospitals within regions. But most prediction models ignore this structure. We wanted to know: **which modeling approach handles hierarchical data best?**
 
 We compared three fundamentally different approaches:
 - **Statistical** — Hierarchical Mixed Models (the classic approach)
@@ -31,20 +31,6 @@ The hierarchy: Patient → Hospital → Region
 
 Tree-based models consistently outperformed the others across different sample sizes, simplified hierarchies, and the external MIMIC dataset.
 
-## Files
-
-```
-├── src/
-│   ├── models.py              # Model implementations (HRF, HNN, HMM)
-│   ├── run_nis_analysis.py    # Main analysis on NIS data  
-│   ├── run_mimic_analysis.py  # External validation on MIMIC
-│   └── utils.py               # Helper functions
-├── notebooks/
-│   ├── HC_2LEVELS.ipynb       # Two-level hierarchy experiments
-│   ├── HMsP_HCP.ipynb         # Sample size sensitivity
-│   └── HC_MIMIC.ipynb         # MIMIC validation
-└── requirements.txt
-```
 
 ## Quick start
 
