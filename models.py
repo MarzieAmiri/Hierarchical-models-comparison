@@ -5,8 +5,6 @@
 #   - HierarchicalRandomForest (tree-based)
 #   - HierarchicalNeuralNetwork (neural)
 #   - HierarchicalMixedModel (statistical)
-#
-# Paper: "Hierarchical data modeling: A systematic comparison..."
 # ============================================================================
 
 import numpy as np
