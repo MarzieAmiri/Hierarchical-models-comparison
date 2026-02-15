@@ -1,12 +1,3 @@
-# ============================================================================
-# Hierarchical Models for Nested Data
-# ============================================================================
-# Three approaches to modeling hierarchical/nested data:
-#   - HierarchicalRandomForest (tree-based)
-#   - HierarchicalNeuralNetwork (neural)
-#   - HierarchicalMixedModel (statistical)
-# ============================================================================
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -17,18 +8,7 @@ from statsmodels.regression.mixed_linear_model import MixedLM
 from torch.utils.data import DataLoader, TensorDataset
 import multiprocessing
 
-
-# ============================================================================
-# TREE-BASED: Hierarchical Random Forest
-# ============================================================================
-
 class HierarchicalRandomForest:
-    """
-    Random forest that models residuals at each hierarchical level.
-    
-    The idea: fit a patient-level model first, then model the hospital-level
-    residuals, then the region-level residuals. Predictions combine all levels.
-    """
     
     def __init__(self, n_jobs=-1):
         self.n_jobs = n_jobs if n_jobs > 0 else multiprocessing.cpu_count()
@@ -51,11 +31,6 @@ class HierarchicalRandomForest:
         self.is_fitted = False
     
     def fit(self, X, y, groups):
-        """
-        Fit models at each level of the hierarchy.
-        
-        groups should have keys: 'HOSP_NIS' (hospital) and 'HOSP_REGION' (region)
-        """
         X_scaled = self.scaler.fit_transform(X)
         
         # Level 1: Patient features only
@@ -92,19 +67,9 @@ class HierarchicalRandomForest:
         )
         
         return patient_pred + hospital_pred + region_pred
-
-
-# ============================================================================
-# NEURAL: Hierarchical Neural Network
-# ============================================================================
+        
 
 class _HierarchicalNN(nn.Module):
-    """
-    Neural network with learned embeddings for each hierarchical level.
-    
-    Hospital and region get their own embedding tables. These are concatenated
-    with patient features and fed through a shared prediction network.
-    """
     
     def __init__(self, input_dim, num_hospitals, num_regions):
         super().__init__()
@@ -165,9 +130,6 @@ class _HierarchicalNN(nn.Module):
 
 
 class HierarchicalNeuralNetwork:
-    """
-    Wrapper class for training and inference with the hierarchical NN.
-    """
     
     def __init__(self, input_dim, num_hospitals, num_regions):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -268,20 +230,8 @@ class HierarchicalNeuralNetwork:
         
         return torch.cat(predictions).numpy()
 
-
-# ============================================================================
-# STATISTICAL: Hierarchical Mixed Model
-# ============================================================================
-
 class HierarchicalMixedModel:
-    """
-    Linear mixed model with random effects for hospital.
-    
-    This is the classic statistical approach — fixed effects for patient
-    features, random intercepts for hospitals. Interpretable but can be
-    slow to converge on large datasets.
-    """
-    
+   
     def __init__(self, max_iter=100):
         self.scaler = StandardScaler()
         self.model = None
@@ -298,14 +248,12 @@ class HierarchicalMixedModel:
         
         model = MixedLM(endog=y, exog=X_with_intercept, groups=hospital_groups)
         
-        # Try different optimization methods if one fails
         try:
             self.model = model.fit(maxiter=self.max_iter, method='lbfgs')
         except:
             try:
                 self.model = model.fit(maxiter=self.max_iter, method='cg')
             except:
-                # Last resort: simpler model
                 self.model = model.fit(maxiter=self.max_iter // 2, reml=False)
         
         return self
@@ -320,41 +268,7 @@ class HierarchicalMixedModel:
         return self.model.predict(X_with_intercept)
     
     def get_params(self):
-        """Return estimated coefficients."""
         if self.model is None:
             return None
         return self.model.params
 
-
-# ============================================================================
-# Quick test
-# ============================================================================
-
-if __name__ == "__main__":
-    # Generate some fake hierarchical data
-    np.random.seed(42)
-    n = 1000
-    
-    X = np.random.randn(n, 10)
-    hospitals = np.random.randint(0, 50, n)
-    regions = np.random.randint(0, 4, n)
-    
-    # Target with hierarchical structure
-    y = X[:, 0] * 2 + hospitals * 0.1 + regions * 0.5 + np.random.randn(n)
-    
-    groups = {'HOSP_NIS': hospitals, 'HOSP_REGION': regions}
-    
-    # Test each model
-    print("Testing HierarchicalRandomForest...")
-    hrf = HierarchicalRandomForest()
-    hrf.fit(X[:800], y[:800], {k: v[:800] for k, v in groups.items()})
-    pred_hrf = hrf.predict(X[800:], {k: v[800:] for k, v in groups.items()})
-    print(f"  R² = {1 - np.var(y[800:] - pred_hrf) / np.var(y[800:]):.3f}")
-    
-    print("\nTesting HierarchicalMixedModel...")
-    hmm = HierarchicalMixedModel()
-    hmm.fit(X[:800], y[:800], {k: v[:800] for k, v in groups.items()})
-    pred_hmm = hmm.predict(X[800:])
-    print(f"  R² = {1 - np.var(y[800:] - pred_hmm) / np.var(y[800:]):.3f}")
-    
-    print("\nDone!")
